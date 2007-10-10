@@ -1,0 +1,41 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: Wiki-Dashboard\n"
+"POT-Creation-Date: \n"
+"PO-Revision-Date: 2007-10-01 21:22+0100\n"
+"Last-Translator: Dzamir <dzamir@coders4fun.com>\n"
+"Language-Team: coders4fun <postmaster@coders4fun.com>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Poedit-KeywordsList: __;_e\n"
+"X-Poedit-Basepath: .\n"
+"X-Poedit-Language: Italian\n"
+"X-Poedit-Country: ITALY\n"
+"X-Poedit-SearchPath-0: /home/dzamir/Projects/Wordpress/wiki-dashboard/src\n"
+
+#: /home/dzamir/Projects/Wordpress/wiki-dashboard/src/mini-wiki.php:7
+msgid "Error opening file in write mode."
+msgstr "Errore di apertura del file in scrittura."
+
+#: /home/dzamir/Projects/Wordpress/wiki-dashboard/src/mini-wiki.php:14
+msgid "Wiki"
+msgstr "Wiki"
+
+#: /home/dzamir/Projects/Wordpress/wiki-dashboard/src/mini-wiki.php:21
+#: /home/dzamir/Projects/Wordpress/wiki-dashboard/src/mini-wiki.php:45
+msgid "Error opening file in read mode."
+msgstr "Errore di apertura del file in lettura."
+
+#: /home/dzamir/Projects/Wordpress/wiki-dashboard/src/mini-wiki.php:53
+msgid "Save"
+msgstr "Salva"
+
+#: /home/dzamir/Projects/Wordpress/wiki-dashboard/src/mini-wiki.php:53
+msgid "Restore last version"
+msgstr "Ripristina la versione precedente"
+
+#: /home/dzamir/Projects/Wordpress/wiki-dashboard/src/mini-wiki.php:65
+msgid "Edit page"
+msgstr "Modifica la pagina"
+
