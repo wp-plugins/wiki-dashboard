@@ -10,3 +10,4 @@ Lista cose da fare di Davide:
 * Scrivere un articolo sulle linked list in c++
 * Strutturare le pagine del progetto miniwiki e fare 1 post
 * Fare la nuova versione di miniwiki con i diff
+* prova
