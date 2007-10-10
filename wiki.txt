@@ -1,18 +1,21 @@
-[list]
-[li]List element[/li]
-[li]List element[/li]
-[li]List element[/li]
-[li]List element[/li]
-[/list]
+[list][li]Elemento lista[/li][li]Elemento lista[/li][li]Elemento lista[/li][li]Elemento lista[/li][li]Elemento lista[/li][/list][b]TITOLO IN GRASSETTO![/b]
 
-[b]Bold[/b]
-[i]Italic[/i]
-[big]BIG TEXT[/big]
-[sm]small text[/sm]
-URL: http://www.coders4fun.com
-Email: gino@paoli.it
-[color=red]Red text[/color]
-[color=yellow]Yellow text[/color]
-[color=green]Green text[/color]
-[color=blue]Blue text[/color]
-[color=darkred]Dark red text[/color]
+[b][i]TAG ANNIDATI[/i][/b]
+
+[big]TESTO GRANDE[/big] [sm]TESTO PICCOLO[/sm]
+
+URL: http://www.google.com
+URL: http://www.google.it
+URL: http://www.google.de
+URL: http://www.google.ch
+
+Email: pippo@pippo.com
+
+[color=red]TESTO COLORATO[/color]
+[color=yellow]TESTO COLORATO[/color]
+[color=green]TESTO COLORATO[/color]
+[color=blue]TESTO COLORATO[/color]
+[color=darkred]TESTO COLORATO[/color]
+
+[b]02/11/06[/b]
+Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Quisque eu elit. Nulla facilisi. Nam purus. Nullam tristique. Aenean nisi nunc, mollis vitae, posuere eget, pretium a, dolor. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Nam dolor. Quisque ultricies. Morbi faucibus pretium massa. Pellentesque tortor sapien, molestie vitae, vehicula quis, http://www.napolux.com consectetuer at, nisi. Nunc pharetra congue mauris. Maecenas elementum eleifend nulla. pippo@ddddddddd.com Vestibulum non massa porttitor neque volutpat eleifend. Curabitur rutrum sagittis pede. Aenean cursus rhoncus arcu. Nulla eget risus. Nulla quam neque, pellentesque ac, consectetuer at, interdum vitae, arcu. Integer elementum rhoncus sem.

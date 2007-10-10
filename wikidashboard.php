@@ -24,22 +24,47 @@ Author URI: http://www.coders4fun.com/dzamir
     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
+$OPTION_VERSION = 'wiki_dashboard_version';
+$current_version = 1;
 
-load_plugin_textdomain("wiki-dashboard", "wp-content/plugins/wiki-dashboard");
 // Hook for adding admin menus
 add_action('admin_menu', 'mt_add_pages');
+add_action('init', 'wiki_dashboard_init');
 
 // action function for above hook
 function mt_add_pages() {
+    // Add a new submenu under Options:
+    add_options_page('Test Options', 'Test Options', 8, 'testoptions', 'mt_options_page');
+
     // Add a submenu to the custom top-level menu:
     add_submenu_page('index.php', 'Wiki', 'Wiki', 1, 'wiki', 'mt_wiki');
+
+    // Add a submenu to the custom top-level menu:
+    add_submenu_page('index.php', 'TestDiff', 'TestDiff', 2, 'testdiff', 'mt_testdiff');
 }
 
-// wiki function
+// mt_options_page() displays the page content for the Test Options submenu
+function mt_options_page() {
+    echo "<h2>Test Options</h2>";
+}
+
+// init function
+function wiki_dashboard_init() {
+	load_plugin_textdomain("wiki-dashboard", "wp-content/plugins/wiki-dashboard");
+	CheckForInstall();
+}
+
+
+// mt_manage_page() displays the page content for the Test Manage submenu
 function mt_wiki() {
-	// include the file with the wiki source code	
 	include("mini-wiki.php");
 }
 
+// mt_manage_page() displays the page content for the Test Manage submenu
+function mt_testdiff() {
+	echo '<div class="wrap">';
+	include("inline_example.php");
+	echo '</div>';
+}
 
 ?>
