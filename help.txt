@@ -1,0 +1,18 @@
+[list]
+[li]List element[/li]
+[li]List element[/li]
+[li]List element[/li]
+[li]List element[/li]
+[/list]
+
+[b]Bold[/b]
+[i]Italic[/i]
+[big]BIG TEXT[/big]
+[sm]small text[/sm]
+URL: http://www.coders4fun.com
+Email: gino@paoli.it
+[color=red]Red text[/color]
+[color=yellow]Yellow text[/color]
+[color=green]Green text[/color]
+[color=blue]Blue text[/color]
+[color=darkred]Dark red text[/color]
