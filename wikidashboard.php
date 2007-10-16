@@ -55,14 +55,15 @@ function mt_options_page() {
 
 // init function
 function wiki_dashboard_init() {
-	global $wiki_dashboard;
 	load_plugin_textdomain("wiki-dashboard", "wp-content/plugins/wiki-dashboard");
 }
 
 
 // mt_manage_page() displays the page content for the Test Manage submenu
 function mt_wiki() {
-	include("mini-wiki.php");
+//	include("mini-wiki.php");
+	global $wiki_dashboard;
+	$wiki_dashboard->PrintMainPage();
 }
 
 // mt_manage_page() displays the page content for the Test Manage submenu
