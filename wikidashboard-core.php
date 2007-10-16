@@ -119,6 +119,20 @@ SQL;
 		echo "page ".$pageID;
 	}
 
+	function PrintAllPages()
+	{
+		$pages = $wiki_dashboard->GetPages();
+		if ($pages)
+		{
+			foreach ($pages as $page) 
+			{
+				echo "<a href='".$this->wiki_base_page."&wikipage=".$page->ID."'>".$page->Title."</a>";
+			}
+		}
+		// Print the shared wiki
+		// PrintPage(0);
+	}
+
 	function PrintMainPage()
 	{
 		require("parsing.inc.php");?>
@@ -134,16 +148,7 @@ SQL;
 		// show all pages
 		else
 		{
-			$pages = $wiki_dashboard->GetPages();
-			if ($pages)
-			{
-				foreach ($pages as $page) 
-				{
-					echo "<a href='".$this->wiki_base_page."&wikipage=".$page->ID."'>".$page->Title."</a>";
-				}
-			}
-			// Print the shared wiki
-			// PrintPage(0);
+			$this->PrintAllPages();
 		}
 		?>
 		</div><?
