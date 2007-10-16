@@ -24,8 +24,13 @@ Author URI: http://www.coders4fun.com/dzamir
     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-$OPTION_VERSION = 'wiki_dashboard_version';
+require_once("wikidashboard-core.php");
+// current plugin version
 $current_version = 1;
+$wiki_dashboard;
+
+$wiki_dashboard = new WikiDashboard();
+$wiki_dashboard->CheckForInstall();
 
 // Hook for adding admin menus
 add_action('admin_menu', 'mt_add_pages');
@@ -50,8 +55,8 @@ function mt_options_page() {
 
 // init function
 function wiki_dashboard_init() {
+	global $wiki_dashboard;
 	load_plugin_textdomain("wiki-dashboard", "wp-content/plugins/wiki-dashboard");
-	CheckForInstall();
 }
 
 
