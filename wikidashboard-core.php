@@ -35,7 +35,7 @@ class WikiDashboard
 			$this->installed_version = 0;
 
 		// if the plugin first installation, create the tables
-		if ($this->installed_version < 2)
+		if ($this->installed_version < 1)
 		{
 			$this->Uninstall();
 			// create table wp_wiki_dashboard
@@ -43,7 +43,7 @@ class WikiDashboard
 				CREATE TABLE  `wordpress`.`wp_wiki_dashboard` (
 				  `PageID` bigint(20) unsigned NOT NULL default '0',
 				  `RevisionID` bigint(20) NOT NULL,
-				  PRIMARY KEY  (`PageID`,`RevisionID`)
+				  PRIMARY KEY  (`PageID`)
 				) ENGINE=MyISAM DEFAULT CHARSET=latin1
 SQL;
 			$wpdb->query($q);
@@ -85,8 +85,10 @@ SQL;
 			$wpdb->query($q);
 
 //			add_option($OPTION_VERSION, $version, 'Program version', 'yes');
+
 			// add the main page
 			$this->AddPage(true, "HomePage", true);
+
 			// update the version option
 			if ($this->installed_version != $current_version) {
 				update_option($OPTION_VERSION, $current_version);
@@ -95,22 +97,27 @@ SQL;
 
 	}
 
-	function AddPage($shared_page, $title, $main_page)
+	// returns the current user, or the id of the shared user if shareduser is true 
+	function GetUser($sharedUser)
 	{
-		global $wpdb;
-		$userID;
-		// if it's a page shared to all blog users, userID = 0
-		if ($shared_page)
+		if ($sharedUser)
 		{
-			$userID = 0;
+			// if it's a page shared to all blog users, userID = 0
+			return 0;
 		}
 		else
 		{
 			// else assign the current user id
 			global $userdata;
 			get_currentuserinfo();
-			$userID = $userdata->ID;
+			return $userdata->ID;
 		}
+	}
+
+	function AddPage($shared_page, $title, $main_page)
+	{
+		global $wpdb;
+		$userID = $this->GetUser($shared_page);
 		$postDate = current_time('mysql');
 		$safe_title = $wpdb->escape($title); 
 		$q = "INSERT INTO wp_wiki_pages SET UserID = $userID, Title= '$safe_title', Creation_Date = '$postDate'";
@@ -121,12 +128,8 @@ SQL;
 		{
 			$pageID = $result->PageID;
 		}
-	//	$q = "INSERT INTO wp_wiki_revisions VALUES(0, $pageID, '', '$postDate')";
-		//$wpdb->query($q);
 		// adding the first (empty) revision
 		$this->AddRevision($userID, $pageID, '', $postDate);
-		$q = "INSERT INTO wp_wiki_dashboard SET PageID = $pageID, RevisionID = 0";
-		$wpdb->query($q);
 		if ($main_page)
 		{
 			// check if a main page for this user already exists
@@ -143,12 +146,16 @@ SQL;
 		}
 	}
 
-
 	function AddRevision($userID, $pageID, $content, $postDate)
 	{
 		global $wpdb;
 		$safeContent = $wpdb->escape($content); 
 		$q = "INSERT INTO wp_wiki_revisions SET PageID = $pageID, Content = '$safeContent', Date = '$postDate'"; 
+		$wpdb->query($q);
+		$q = "SELECT RevisionID FROM wp_wiki_revisions WHERE PageID = $pageID AND Content = '$safeContent' AND Date = '$postDate'"; 
+		$results = $wpdb->get_results($q);
+		$revisionID = $results[0]->RevisionID;
+		$q = "INSERT INTO wp_wiki_dashboard SET PageID = $pageID, RevisionID = $revisionID";
 		$wpdb->query($q);
 	}
 
@@ -157,23 +164,91 @@ SQL;
 	{
 		global $wpdb;
 		global $userdata;
-		$results;
 		get_currentuserinfo();
-		$userid = $userdata->ID;
-		$q = "SELECT * FROM wp_wiki_pages WHERE UserID = 0 OR UserID = $userid";
+		$userID = $userdata->ID;
+		$q = "SELECT * FROM wp_wiki_pages WHERE UserID = 0 OR UserID = $userID";
 		return $wpdb->get_results($q);
 	}
 
-	function GetPage($pageID)
+	// Returns the text of the last revision or false if no page exists with the specified ID
+	function GetLastRevisionText($pageID)
 	{
-		echo "asd";
+		global $wpdb;
+		$q = "SELECT RevisionID FROM wp_wiki_dashboard WHERE PageID = $pageID";
+		$results = $wpdb->get_results($q);
+		if (!$results)
+			return FALSE;
+		$revisionID = $results[0]->RevisionID;
+		$q = "SELECT Content FROM wp_wiki_revisions where RevisionID = $revisionID";
+		$results = $wpdb->get_results($q);
+		if (!$results)
+			return FALSE;
+		return $results[0]->Content;
+	}
+
+	// returns true if the current user can access the page
+	function CheckAccessToPage($pageID)
+	{
+		global $wpdb;
+		global $userdata;
+		get_currentuserinfo();
+		$userID = $userdata->ID;
+		$q = "SELECT UserID FROM wp_wiki_pages WHERE PageID = $pageID AND (UserID = 0 OR UserID = $userID)";
+		if ($wpdb->query($q) > 0)
+		{
+			return true;
+		}
+		else
+		{
+			return false;
+		}
+	}
+
+	// returns the pageID that is the mainpage for the user, if the page doesn't exists the function will create it
+	function GetMainPage($sharedPage)
+	{
+		global $wpdb;
+		$userID = $this->GetUser($sharedPage);
+		$q = "SELECT PageID FROM wp_wiki_users_main_page where UserID = $userID";
+		$results = $wpdb->get_results($q);
+		if ($results)
+		{
+			return $results[0]->PageID;
+		} else
+		{
+			// add the main page for the user
+			$this->AddPage($shared_page, "HomePage", true);
+			// call this function recorsive
+			return $this->GetMainPage($sharedPage);
+			// TODO: if addpage fails, this function will recurse infinite times
+		}
+	}
+
+	function PrintPageNotFoundError()
+	{
+		echo "<h2>";
+		_e("You don't have access to this page, or the page doesn't exists!"); 
+		echo "</h2>";
 	}
 
 	function PrintPage($pageID, $showDiv)
 	{
+		// check if the current user can access this page
+		if (!$this->CheckAccessToPage($pageID))
+		{
+			$this->PrintPageNotFoundError();
+			return;
+		}
+		$content = $this->GetLastRevisionText($pageID);
+		if ($content === false)
+		{
+			$this->PrintPageNotFoundError();
+			return;
+		}
 		if ($showDiv)
 			echo '<div class="wrap">';
 		echo "<h2>".$pageID."</h2>";
+		echo $content;
 		if ($showDiv)
 			echo '</div>';
 	}
@@ -189,11 +264,11 @@ SQL;
 		{
 			foreach ($pages as $page) 
 			{
-				echo "<a href='".$this->wiki_base_page."&wikipage=".$page->ID."'>".$page->Title."</a>";
+				echo "<a href='".$this->wiki_base_page."&wikipage=".$page->PageID."'>".$page->Title."</a>";
 			}
 		}
 		// Print the shared wiki
-		$this->PrintPage(1, false);	
+		$this->PrintPage($this->GetMainPage(true), false);	
 		echo '</div>';
 	}
 
