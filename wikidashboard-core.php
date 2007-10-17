@@ -12,6 +12,19 @@ class WikiDashboard
 		$this->wiki_base_page = $_SERVER['PHP_SELF']."?page=wiki";
 	}
 
+	function Uninstall()
+	{
+		global $wpdb;
+		$q = "DROP TABLE wp_wiki_revisions";
+		$wpdb->query($q);
+		$q = "DROP TABLE wp_wiki_pages";
+		$wpdb->query($q);
+		$q = "DROP TABLE wp_wiki_dashboard";
+		$wpdb->query($q);	
+		$q = "DROP TABLE wp_wiki_users_main_page";
+		$wpdb->query($q);
+	}
+
 	function CheckForInstall() 
 	{
 		global $wpdb;
@@ -22,72 +35,121 @@ class WikiDashboard
 			$this->installed_version = 0;
 
 		// if the plugin first installation, create the tables
-		if ($this->installed_version < 1)
+		if ($this->installed_version < 2)
 		{
-				// create table wp_wiki_dashboard
-				$q = <<<SQL
-					CREATE TABLE  `wordpress`.`wp_wiki_dashboard` (
-					  `PageID` bigint(20) unsigned NOT NULL default '0',
-					  `RevisionID` bigint(20) NOT NULL,
-					  PRIMARY KEY  (`PageID`,`RevisionID`)
-					) ENGINE=MyISAM DEFAULT CHARSET=latin1
+			$this->Uninstall();
+			// create table wp_wiki_dashboard
+			$q = <<<SQL
+				CREATE TABLE  `wordpress`.`wp_wiki_dashboard` (
+				  `PageID` bigint(20) unsigned NOT NULL default '0',
+				  `RevisionID` bigint(20) NOT NULL,
+				  PRIMARY KEY  (`PageID`,`RevisionID`)
+				) ENGINE=MyISAM DEFAULT CHARSET=latin1
 SQL;
-				$wpdb->query($q)
-;
-				// create table wp_wiki_pages
-				$q = <<<SQL
-					CREATE TABLE  `wordpress`.`wp_wiki_pages` (
-					  `ID` bigint(20) NOT NULL auto_increment,
-					  `UserID` bigint(20) NOT NULL,
-					  `Title` varchar(255) NOT NULL,
-					  `Creation_Date` datetime NOT NULL,
-					  PRIMARY KEY  (`ID`,`UserID`)
-					) ENGINE=MyISAM DEFAULT CHARSET=latin1
-SQL;
-				$wpdb->query($q);
+			$wpdb->query($q);
 
-				// create table wp_wiki_revisions
-				$q = <<<SQL
-					CREATE TABLE  `wordpress`.`wp_wiki_revisions` (
-					  `IDRevision` bigint(20) NOT NULL,
-					  `IDPage` bigint(20) NOT NULL,
-					  `Content` text,
-					  `Date` datetime NOT NULL,
-					  PRIMARY KEY  (`IDRevision`,`IDPage`)
-					) ENGINE=MyISAM DEFAULT CHARSET=latin1
+			// create table wp_wiki_pages
+			$q = <<<SQL
+				CREATE TABLE  `wordpress`.`wp_wiki_pages` (
+				  `PageID` bigint(20) NOT NULL auto_increment,
+				  `UserID` bigint(20) NOT NULL,
+				  `Title` varchar(255) NOT NULL,
+				  `Creation_Date` datetime NOT NULL,
+				  PRIMARY KEY  (`PageID`)
+				) ENGINE=MyISAM AUTO_INCREMENT=3 DEFAULT CHARSET=latin1
 SQL;
-				$wpdb->query($q);
+			$wpdb->query($q);
 
-	//			add_option($OPTION_VERSION, $version, 'Program version', 'yes');
-				// add the main page
-				$this->AddPage(TRUE, "HomePage");
+			// create table wp_wiki_revisions
+			$q = <<<SQL
+				CREATE TABLE  `wordpress`.`wp_wiki_revisions` (
+				  `RevisionID` bigint(20) NOT NULL auto_increment,
+				  `PageID` bigint(20) NOT NULL,
+				  `UserID` bigint(20) NOT NULL,
+				  `Content` text,
+				  `Date` datetime NOT NULL,
+				  PRIMARY KEY  (`RevisionID`)
+				) ENGINE=MyISAM AUTO_INCREMENT=3 DEFAULT CHARSET=latin1
+SQL;
+			$wpdb->query($q);
+
+			// create table wp_wiki_users_main_page
+			$q = <<<SQL
+				CREATE TABLE  `wordpress`.`wp_wiki_users_main_page` (
+				  `UserID` bigint(20) NOT NULL,
+				  `PageID` bigint(20) NOT NULL,
+				  PRIMARY KEY  (`UserID`)
+				) ENGINE=MyISAM DEFAULT CHARSET=latin1
+SQL;
+
+			$wpdb->query($q);
+
+//			add_option($OPTION_VERSION, $version, 'Program version', 'yes');
+			// add the main page
+			$this->AddPage(true, "HomePage", true);
+			// update the version option
+			if ($this->installed_version != $current_version) {
+				update_option($OPTION_VERSION, $current_version);
+			}
 		}
 
-		// update the version option
-		if ($this->installed_version != $current_version) {
-			update_option($OPTION_VERSION, $current_version);
-		}
 	}
 
-	function AddPage($shared_page, $title)
+	function AddPage($shared_page, $title, $main_page)
 	{
 		global $wpdb;
-		$user_id;
-		// if it's a page shared to all blog users, user_id = 0
+		$userID;
+		// if it's a page shared to all blog users, userID = 0
 		if ($shared_page)
-			$user_id = 0;
+		{
+			$userID = 0;
+		}
 		else
 		{
 			// else assign the current user id
 			global $userdata;
 			get_currentuserinfo();
-			$user_id = $userdata->ID;
+			$userID = $userdata->ID;
 		}
-		$post_date = current_time('mysql');
+		$postDate = current_time('mysql');
 		$safe_title = $wpdb->escape($title); 
-		$q = "INSERT INTO wp_wiki_pages SET UserID = $user_id, Title= '$safe_title', Creation_Date = '$post_date'";
+		$q = "INSERT INTO wp_wiki_pages SET UserID = $userID, Title= '$safe_title', Creation_Date = '$postDate'";
 		$wpdb->query($q);		
-//INSERT INTO wp_wiki_pages SET UserID = 0, Title='prova2', Creation_Date= '2007-10-10 10:10:10'
+		$q = "SELECT PageID FROM wp_wiki_pages WHERE UserID = $userID AND Title = '$safe_title' AND Creation_Date = '$postDate'";
+		$results = $wpdb->get_results($q);
+		foreach ($results as $result)
+		{
+			$pageID = $result->PageID;
+		}
+	//	$q = "INSERT INTO wp_wiki_revisions VALUES(0, $pageID, '', '$postDate')";
+		//$wpdb->query($q);
+		// adding the first (empty) revision
+		$this->AddRevision($userID, $pageID, '', $postDate);
+		$q = "INSERT INTO wp_wiki_dashboard SET PageID = $pageID, RevisionID = 0";
+		$wpdb->query($q);
+		if ($main_page)
+		{
+			// check if a main page for this user already exists
+			$q = "SELECT * FROM wp_wiki_users_main_page WHERE UserID = $userID";
+			if ($wpdb->query($q) > 0)
+			{
+				// ERROR!! A main page already exists
+				echo "A main page already exists for this user";
+			} else
+			{
+				$q = "INSERT INTO wp_wiki_users_main_page VALUES($userID, $pageID)";
+				$wpdb->query($q);
+			}
+		}
+	}
+
+
+	function AddRevision($userID, $pageID, $content, $postDate)
+	{
+		global $wpdb;
+		$safeContent = $wpdb->escape($content); 
+		$q = "INSERT INTO wp_wiki_revisions SET PageID = $pageID, Content = '$safeContent', Date = '$postDate'"; 
+		$wpdb->query($q);
 	}
 
 	// returns all pages visible from the current user
@@ -107,21 +169,22 @@ SQL;
 		echo "asd";
 	}
 
-
-	function AddRevision($userID, $pageId, $content)
+	function PrintPage($pageID, $showDiv)
 	{
-		$user_id = 0;
-		$post_date = current_time('mysql');
-	}
-
-	function PrintPage($pageID)
-	{
-		echo "page ".$pageID;
+		if ($showDiv)
+			echo '<div class="wrap">';
+		echo "<h2>".$pageID."</h2>";
+		if ($showDiv)
+			echo '</div>';
 	}
 
 	function PrintAllPages()
 	{
-		$pages = $wiki_dashboard->GetPages();
+		echo'<div class="wrap">';
+		echo'<h2>';
+		_e("Wiki");
+		echo'</h2>';
+		$pages = $this->GetPages();
 		if ($pages)
 		{
 			foreach ($pages as $page) 
@@ -130,28 +193,25 @@ SQL;
 			}
 		}
 		// Print the shared wiki
-		// PrintPage(0);
+		$this->PrintPage(1, false);	
+		echo '</div>';
 	}
 
 	function PrintMainPage()
 	{
-		require("parsing.inc.php");?>
-		<div class="wrap">
-		<h2><?php _e("Wiki"); ?></h2>		<?php
+		require("parsing.inc.php");
 		global $wiki_dashboard;
 		// show the single page
 		if(isset($_GET["wikipage"]))
 		{
 			$wikipage = $_GET["wikipage"];
-			$this->PrintPage($wikipage);
+			$this->PrintPage($wikipage, true);
 		}
 		// show all pages
 		else
 		{
 			$this->PrintAllPages();
 		}
-		?>
-		</div><?
 	}
 
 }
